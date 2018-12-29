@@ -1,0 +1,38 @@
+{
+  "name": "tsf-tictactoe",
+  "version": "1.0.0",
+  "description": "A DNN based Tic Tac Toe Bot based on the Tensorflow JS Library",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "babel ./src/js -d ./src/lib && sass src/sass:src/css",
+    "babel-watch": "babel ./src/js -w -d ./src/lib",
+    "sass-watch": "sass --watch src/sass:src/css",
+    "start": "npm run sass-watch & npm run babel-watch"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/FlomoN/tsf-tictactoe.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/FlomoN/tsf-tictactoe/issues"
+  },
+  "homepage": "https://github.com/FlomoN/tsf-tictactoe#readme",
+  "dependencies": {
+    "@tensorflow/tfjs": "^0.14.1"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.2.3",
+    "@babel/core": "^7.2.2",
+    "@babel/preset-env": "^7.2.3",
+    "sass": "^1.15.2"
+  },
+  "babel": {
+    "presets": [
+      "@babel/env"
+    ]
+  }
+}
