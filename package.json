@@ -8,7 +8,9 @@
     "build": "babel ./src/js -d ./src/lib && sass src/sass:src/css",
     "babel-watch": "babel ./src/js -w -d ./src/lib",
     "sass-watch": "sass --watch src/sass:src/css",
-    "start": "npm run sass-watch & npm run babel-watch"
+    "start-b-s": "npm run sass-watch & npm run babel-watch",
+    "parcel-watch": "rm -rf dist && rm -rf .cache && parcel src/index.html",
+    "start": "npm run parcel-watch"
   },
   "repository": {
     "type": "git",
@@ -28,6 +30,7 @@
     "@babel/cli": "^7.2.3",
     "@babel/core": "^7.2.2",
     "@babel/preset-env": "^7.2.3",
+    "parcel-bundler": "^1.11.0",
     "sass": "^1.15.2"
   },
   "babel": {
