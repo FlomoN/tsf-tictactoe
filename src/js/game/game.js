@@ -1,7 +1,7 @@
 /**
  * A class that simulates a Tic Tac Toe Game
  */
-class tictactoegame {
+class Tictactoegame {
   constructor() {
     this.field = [0, 0, 0, 0, 0, 0, 0, 0, 0];
     this.roundsPlayed = 0;
@@ -40,9 +40,10 @@ class tictactoegame {
     ];
 
     let winner = 0;
+    let row = [];
 
     if (this.roundsPlayed < 4) {
-      return 0;
+      return { winner, row };
     }
 
     winningStandings.forEach(element => {
@@ -52,10 +53,11 @@ class tictactoegame {
         this.field[element[1]] === this.field[element[2]]
       ) {
         winner = this.field[element[0]];
+        row = element;
       }
     });
 
-    return winner;
+    return { winner, row };
   }
 
   /**
@@ -75,4 +77,4 @@ class tictactoegame {
   }
 }
 
-export default tictactoegame;
+export default Tictactoegame;

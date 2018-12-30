@@ -25,6 +25,7 @@
   "homepage": "https://github.com/FlomoN/tsf-tictactoe#readme",
   "dependencies": {
     "@tensorflow/tfjs": "^0.14.1",
+    "@types/jquery": "^3.3.29",
     "jquery": "^3.3.1"
   },
   "devDependencies": {

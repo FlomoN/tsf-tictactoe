@@ -1,23 +1,18 @@
-import tictactoe from "./game/game";
+import Tictactoe from "./game/game";
+import Bot from "./bot/bot";
+import inputLogic from "./game/inputlogic";
+import $ from "jquery";
 
 console.log("Starting Tic Tac Toe...");
 
-const game1 = new tictactoe();
+const game1 = new Tictactoe();
 console.log(game1.getStandings());
 
-game1.makeMove(1, 4);
-console.log("Spieler 1 setzt auf 4");
-console.log(game1.getStandings());
-game1.makeMove(2, 3);
-console.log("Spieler 2 setzt auf 3");
-console.log(game1.getStandings());
-game1.makeMove(1, 1);
-console.log("Spieler 1 setzt auf 1");
-console.log(game1.getStandings());
-game1.makeMove(2, 0);
-console.log("Spieler 2 setzt auf 0");
-console.log(game1.getStandings());
-game1.makeMove(1, 7);
-console.log("Spieler 1 setzt auf 7");
-console.log(game1.getStandings());
-console.log("Gewinner ist: Spieler " + game1.getWinner());
+inputLogic(game1, true);
+
+const bot1 = new Bot(game1, [{ units: 20, activation: "relu" }]);
+bot1.model.summary();
+
+$(document).click(() => {
+  console.log(bot1.guess()[0]);
+});
