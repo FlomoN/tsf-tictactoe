@@ -1,4 +1,5 @@
 import $ from "jquery";
+import Citizen from "../genetics/citizen";
 
 let currentPlayer = 1;
 
@@ -7,10 +8,10 @@ let currentPlayer = 1;
  * @param game The Game Logic Object
  * @param pvp The Mode of the Game with true being player vs player and false being player vs computer
  */
-export default function setupInputs(game, pvp = false) {
+export default function setupInputs(game, pvp = true, cit = undefined) {
   $(() => {
     setVals(game);
-    onClickBehavior(game, pvp);
+    onClickBehavior(game, pvp, cit);
   });
 }
 
@@ -48,8 +49,9 @@ function convertToTTT(number) {
  * Handles Clicking of the fields
  * @param {TicTacToeGame} game The game logic
  * @param {boolean} pvp pvp enabled or not
+ * @param {Citizen} cit The Citizen to play against
  */
-function onClickBehavior(game, pvp) {
+function onClickBehavior(game, pvp, cit) {
   $(".field").each((index, element) => {
     $(element).click(() => {
       //What happens when a thing gets clicked
@@ -60,6 +62,15 @@ function onClickBehavior(game, pvp) {
           currentPlayer = (currentPlayer % 2) + 1;
         }
         checkIfWon(game);
+      }
+      if (!pvp) {
+        setTimeout(() => {
+          const result = cit.makeMove(2, game);
+          if (!result) {
+            console.log("Bot was stupid!");
+          }
+          setVals(game);
+        }, 500);
       }
     });
   });
