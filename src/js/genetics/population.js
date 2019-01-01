@@ -7,10 +7,11 @@ import * as tf from "@tensorflow/tfjs";
  * and the necessary selection and crossbreeding functions
  */
 class Population {
-  constructor(size, config) {
+  constructor(size, config, mutation) {
     this.size = size;
     this.config = config;
     this.year = 0;
+    this.mutation = mutation;
     this.init();
   }
 
@@ -90,7 +91,35 @@ class Population {
    * Mutates randomly selected Citizens a little bit
    */
   mutate() {
-    //Nothing happens here yet
+    this.nextPopulation.forEach(element => {
+      const chance = Math.random();
+      if (chance <= this.mutation.chance) {
+        const weights = element.getWeights();
+        const newWArr = [];
+        weights.forEach(w => {
+          const arr = w.flatten().dataSync();
+          arr.forEach((val, index) => {
+            const rate = Math.random();
+            if (rate <= this.mutation.rate) {
+              //Set new Value
+              arr[index] = Math.random() * 2 - 1;
+            }
+          });
+          newWArr.push(arr);
+        });
+
+        // Now Reset Weights with new Values
+        const shapes = weights.map(x => x.shape);
+        const finalWeights = [];
+        shapes.forEach((x, index) => {
+          const t = tf.tensor2d(newWArr[index], x);
+          finalWeights.push(t);
+        });
+
+        // And give em to the citizen
+        element.setWeights(finalWeights);
+      }
+    });
   }
 
   /**

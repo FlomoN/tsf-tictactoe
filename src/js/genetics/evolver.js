@@ -6,11 +6,11 @@ import Population from "./population";
  * or to visualize the evolution process
  */
 class Evolver {
-  constructor(pop_size, config, cicles = 500) {
+  constructor(pop_size, config, mutation, cicles = 500) {
     this.size = pop_size;
     this.config = config;
     this.cicles = cicles;
-    this.population = new Population(pop_size, config);
+    this.population = new Population(pop_size, config, mutation);
   }
 
   /**

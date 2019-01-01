@@ -14,7 +14,7 @@ class Citizen {
     this.birthyear = birthyear;
     this.weights = this.brain.extractWeights();
     if (weights) {
-      this.weights[0] = weights;
+      this.setWeights(weights);
     }
   }
 
@@ -36,6 +36,13 @@ class Citizen {
       x.push(element[0]);
     });
     return x;
+  }
+
+  setWeights(w) {
+    this.weights.forEach((element, index) => {
+      element[0] = w[index];
+    });
+    this.brain.setWeights(this.weights);
   }
 
   /**
@@ -60,6 +67,11 @@ class Citizen {
     const guess = this.brain.guess(player, game);
     return guess;
   }
+
+  /**
+   * Kills the Citizen and clears all alocated GPU Memory
+   */
+  kill() {}
 }
 
 export default Citizen;
