@@ -37,13 +37,12 @@ class Bot {
    * @param {Tictactoegame} game the game to guess on
    */
   guess(player, game) {
-    tf.tensor;
-    const input = tf.tensor2d([player, ...game.getStandings()], [1, 10]);
-    const prediction = this.model.predict(input);
-    tf.dispose(input);
-    const result = prediction.argMax(1).dataSync();
-    tf.dispose(prediction);
-    return result[0];
+    return tf.tidy(() => {
+      const input = tf.tensor2d([player, ...game.getStandings()], [1, 10]);
+      const prediction = this.model.predict(input);
+      const result = prediction.argMax(1).dataSync();
+      return result[0];
+    });
   }
 
   /**
@@ -52,11 +51,14 @@ class Bot {
    */
   extractWeights() {
     const weights = [];
-    for (let i = 0; i < this.config.length + 1; i++) {
-      const layer = this.model.getLayer(null, i);
-      const l_weight = layer.getWeights();
-      weights.push(l_weight);
-    }
+    tf.tidy(() => {
+      for (let i = 0; i < this.config.length + 1; i++) {
+        const layer = this.model.getLayer(null, i);
+        const l_weight = layer.getWeights();
+        weights.push(l_weight);
+        tf.keep(l_weight);
+      }
+    });
 
     return weights;
   }
@@ -66,10 +68,22 @@ class Bot {
    * @param {Tensor} weights
    */
   setWeights(weights) {
-    for (let i = 0; i < this.config.length + 1; i++) {
-      const layer = this.model.getLayer(null, i);
-      layer.setWeights(weights[i]);
-    }
+    tf.tidy(() => {
+      for (let i = 0; i < this.config.length + 1; i++) {
+        const layer = this.model.getLayer(null, i);
+        layer.setWeights(weights[i]);
+        // This Behavior is quite weird maybe ask in forum or issue on the github?
+        // Do I have to dispose the weights i put in myself, why doesnt it take those and dispose the old weights
+        tf.dispose(weights[i][0]);
+      }
+    });
+  }
+
+  /**
+   * Frees the GPU Memory so no more Out of Memory Shit happens
+   */
+  kill() {
+    this.model.dispose();
   }
 }
 

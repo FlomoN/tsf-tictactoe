@@ -56,15 +56,18 @@ class Population {
    */
   breed() {
     this.year++;
-    const parents = this.nextPopulation.slice(0);
-    for (let k = 0; k < 2; k++) {
-      shuffle(parents);
-      for (let i = 0; i < this.size / 4; i++) {
-        this.nextPopulation.push(
-          this.cross(parents[i * 2], parents[i * 2 + 1])
-        );
+    tf.tidy(() => {
+      const parents = this.nextPopulation.slice(0);
+      for (let k = 0; k < 2; k++) {
+        shuffle(parents);
+        for (let i = 0; i < this.size / 4; i++) {
+          this.nextPopulation.push(
+            this.cross(parents[i * 2], parents[i * 2 + 1])
+          );
+        }
       }
-    }
+    });
+
     this.mutate();
     this.population = this.nextPopulation;
   }
@@ -77,11 +80,13 @@ class Population {
    */
   cross(mom, dad) {
     const newWeights = [];
-    mom.getWeights().forEach((element, index) => {
-      const b = tf.scalar(2);
-      const newWeight = element.add(dad.getWeights()[index]).div(b);
-      tf.dispose(b);
-      newWeights.push(newWeight);
+    tf.tidy(() => {
+      mom.getWeights().forEach((element, index) => {
+        const b = tf.scalar(2);
+        const newWeight = element.add(dad.getWeights()[index]).div(b);
+        newWeights.push(newWeight);
+        tf.keep(newWeight);
+      });
     });
     const child = new Citizen(this.config, this.year, newWeights);
     return child;
@@ -91,34 +96,42 @@ class Population {
    * Mutates randomly selected Citizens a little bit
    */
   mutate() {
-    this.nextPopulation.forEach(element => {
-      const chance = Math.random();
-      if (chance <= this.mutation.chance) {
-        const weights = element.getWeights();
-        const newWArr = [];
-        weights.forEach(w => {
-          const arr = w.flatten().dataSync();
-          arr.forEach((val, index) => {
-            const rate = Math.random();
-            if (rate <= this.mutation.rate) {
-              //Set new Value
-              arr[index] = Math.random() * 2 - 1;
-            }
+    tf.tidy(() => {
+      this.nextPopulation.forEach(element => {
+        const chance = Math.random();
+        if (chance <= this.mutation.chance) {
+          const weights = element.getWeights();
+          const newWArr = [];
+          weights.forEach(w => {
+            const arr = tf.tidy(() => {
+              return w.flatten().dataSync();
+            });
+
+            arr.forEach((val, index) => {
+              const rate = Math.random();
+              if (rate <= this.mutation.rate) {
+                //Set new Value
+                arr[index] = Math.random() * 2 - 1;
+              }
+            });
+            newWArr.push(arr);
           });
-          newWArr.push(arr);
-        });
 
-        // Now Reset Weights with new Values
-        const shapes = weights.map(x => x.shape);
-        const finalWeights = [];
-        shapes.forEach((x, index) => {
-          const t = tf.tensor2d(newWArr[index], x);
-          finalWeights.push(t);
-        });
+          // Now Reset Weights with new Values
+          const shapes = weights.map(x => x.shape);
 
-        // And give em to the citizen
-        element.setWeights(finalWeights);
-      }
+          const finalWeights = [];
+
+          shapes.forEach((x, index) => {
+            const t = tf.tensor2d(newWArr[index], x);
+            finalWeights.push(t);
+            tf.keep(t);
+          });
+
+          // And give em to the citizen
+          element.setWeights(finalWeights);
+        }
+      });
     });
   }
 
@@ -150,9 +163,11 @@ class Population {
         switch (currentplayer) {
           case 0:
             this.nextPopulation.push(game.p2);
+            game.p1.kill();
             break;
           case 1:
             this.nextPopulation.push(game.p1);
+            game.p2.kill();
             break;
           default:
             break;
@@ -164,9 +179,11 @@ class Population {
         switch (winner - 1) {
           case 0:
             this.nextPopulation.push(game.p1);
+            game.p2.kill();
             break;
           case 1:
             this.nextPopulation.push(game.p2);
+            game.p1.kill();
             break;
           default:
             break;

@@ -1,5 +1,6 @@
 import Bot from "../bot/bot";
 import Tictactoegame from "../game/game";
+import { dispose, tidy } from "@tensorflow/tfjs";
 
 /**
  * A single Citizen in the Population with Behavior for playing Tic Tac Toe
@@ -35,6 +36,7 @@ class Citizen {
     this.weights.forEach(element => {
       x.push(element[0]);
     });
+
     return x;
   }
 
@@ -43,6 +45,7 @@ class Citizen {
       element[0] = w[index];
     });
     this.brain.setWeights(this.weights);
+    this.weights = this.brain.extractWeights();
   }
 
   /**
@@ -71,7 +74,13 @@ class Citizen {
   /**
    * Kills the Citizen and clears all alocated GPU Memory
    */
-  kill() {}
+  kill() {
+    this.brain.kill();
+    //Maybe this shouldnt be here?
+    this.weights.forEach(element => {
+      dispose(element);
+    });
+  }
 }
 
 export default Citizen;

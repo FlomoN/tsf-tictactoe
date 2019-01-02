@@ -15,7 +15,7 @@ $(() => {
     20,
     [{ units: 20, activation: "relu" }, { units: 20, activation: "relu" }],
     { chance: 0.05, rate: 0.2 },
-    1000
+    40
   );
   $("#evolve").click(() => {
     const cit = evolver.evolve();
