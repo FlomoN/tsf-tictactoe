@@ -114,7 +114,7 @@ class Population {
     this.population = this.nextPopulation;
 
     //Recursive until not failing anymore
-    if (genFailed) {
+    if (!this.lowFitness && genFailed) {
       this.setupGames();
       this.play();
       this.breed();
