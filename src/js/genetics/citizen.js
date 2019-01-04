@@ -23,8 +23,8 @@ class Citizen {
    * Determins the Fitness of the current Citizen after the current game
    * @returns number of rounds played (?)
    */
-  fitness() {
-    return 0; //TODO Evaluate Fitness
+  fitness(game) {
+    return game.roundsPlayed;
   }
 
   /**

@@ -16,7 +16,7 @@ class Bot {
           tf.layers.dense({
             units: element.units,
             activation: element.activation,
-            inputDim: 10
+            inputDim: 9
           })
         );
       } else {
@@ -38,10 +38,32 @@ class Bot {
    */
   guess(player, game) {
     return tf.tidy(() => {
-      const input = tf.tensor2d([player, ...game.getStandings()], [1, 10]);
+      const input = tf.tensor2d(
+        this.normalizeInput(player, game.getStandings()),
+        [1, 9]
+      );
       const prediction = this.model.predict(input);
       const result = prediction.argMax(1).dataSync();
       return result[0];
+    });
+  }
+
+  /**
+   * Normalize the Input Field for the Neural Network
+   * @param {number} player The Player number
+   * @param {array} field The input field
+   * @returns the normalized input field array
+   * @private
+   */
+  normalizeInput(player, field) {
+    return field.map(x => {
+      if (x === player) {
+        return 1;
+      } else if (x === 0) {
+        return 0;
+      } else {
+        return -1;
+      }
     });
   }
 
