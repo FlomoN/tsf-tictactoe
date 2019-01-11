@@ -6,11 +6,11 @@ import Population from "./population";
  * or to visualize the evolution process
  */
 class Evolver {
-  constructor(pop_size, config, mutation, cicles = 500) {
+  constructor(pop_size, config, mutation, lowFit, cicles = 500) {
     this.size = pop_size;
     this.config = config;
     this.cicles = cicles;
-    this.population = new Population(pop_size, config, mutation);
+    this.population = new Population(pop_size, config, mutation, lowFit);
   }
 
   /**
@@ -27,15 +27,19 @@ class Evolver {
   }
 
   /**
-   * Makes the Population play tournaments until amount reaches cicles
-   * @returns the best player
+   * Evoluion for Set amount of cicles
+   * @param {(year, avgFit) => {}} callBack Callback that is run every cicle to set visuals
+   * @returns One of the best players
    */
-  evolve() {
+  async evolve(callBack) {
     for (let i = 0; i < this.cicles - 1; i++) {
       this.evolveStep();
-      console.log("Year: " + i);
+      console.log("Year: " + this.population.year);
+      console.log("AvgFit: " + this.population.avgFitness);
+      callBack(this.population.year, this.population.avgFitness);
     }
-    console.log("Year: " + (this.cicles - 1));
+    console.log("Year: " + this.population.year);
+    callBack(this.population.year, this.population.avgFitness);
     return this.evolveStep(true);
   }
 }

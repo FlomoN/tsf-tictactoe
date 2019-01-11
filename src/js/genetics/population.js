@@ -7,11 +7,16 @@ import * as tf from "@tensorflow/tfjs";
  * and the necessary selection and crossbreeding functions
  */
 class Population {
-  constructor(size, config, mutation) {
+  constructor(size, config, mutation, allowLowerFitness = true) {
     this.size = size;
     this.config = config;
     this.year = 0;
     this.mutation = mutation;
+    this.avgFitness = 0;
+    this.genePool = [];
+    this.oldGenePool = [];
+    this.stuckCicles = 0;
+    this.lowFitness = allowLowerFitness;
     this.init();
   }
 
@@ -30,6 +35,8 @@ class Population {
    */
   setupGames() {
     this.games = [];
+    this.oldGenePool = this.genePool.slice(0);
+    this.genePool = [];
     shuffle(this.population);
     for (let i = 0; i < this.size / 2; i++) {
       this.games.push({
@@ -56,17 +63,62 @@ class Population {
    */
   breed() {
     this.year++;
-    const parents = this.nextPopulation.slice(0);
-    for (let k = 0; k < 2; k++) {
-      shuffle(parents);
-      for (let i = 0; i < this.size / 4; i++) {
-        this.nextPopulation.push(
-          this.cross(parents[i * 2], parents[i * 2 + 1])
-        );
+    this.avgFitness = this.genePool.length / 10.0;
+    const genFailed =
+      this.avgFitness < this.oldGenePool.length / 10.0 || this.avgFitness >= 9;
+    //NoLowFitnessAllowed Mechanism
+    if (!this.lowFitness) {
+      if (genFailed && this.stuckCicles < 100) {
+        this.stuckCicles++;
+        this.genePool.forEach(element => {
+          if (
+            !this.oldGenePool.includes(element) &&
+            !this.nextPopulation.includes(element)
+          ) {
+            try {
+              element.kill();
+            } catch (error) {
+              console.log("Already disposed");
+            }
+          }
+        });
+        this.genePool = this.oldGenePool;
+      } else {
+        this.stuckCicles = 0;
+        this.oldGenePool.forEach(element => {
+          if (!this.genePool.includes(element)) {
+            try {
+              element.kill();
+            } catch (error) {
+              console.log("Already disposed");
+            }
+          }
+        });
+        console.log(tf.memory());
       }
     }
+    tf.tidy(() => {
+      let mom = this.genePool[0];
+      let dad;
+      do {
+        shuffle(this.genePool);
+        dad = this.genePool[0];
+      } while (mom == dad);
+
+      for (let i = 0; i < this.size / 2; i++) {
+        this.nextPopulation.push(this.cross(mom, dad));
+      }
+    });
+
     this.mutate();
     this.population = this.nextPopulation;
+
+    //Recursive until not failing anymore
+    if (!this.lowFitness && genFailed) {
+      this.setupGames();
+      this.play();
+      this.breed();
+    }
   }
 
   /**
@@ -77,11 +129,13 @@ class Population {
    */
   cross(mom, dad) {
     const newWeights = [];
-    mom.getWeights().forEach((element, index) => {
-      const b = tf.scalar(2);
-      const newWeight = element.add(dad.getWeights()[index]).div(b);
-      tf.dispose(b);
-      newWeights.push(newWeight);
+    tf.tidy(() => {
+      mom.getWeights().forEach((element, index) => {
+        const b = tf.scalar(2);
+        const newWeight = element.add(dad.getWeights()[index]).div(b);
+        newWeights.push(newWeight);
+        tf.keep(newWeight);
+      });
     });
     const child = new Citizen(this.config, this.year, newWeights);
     return child;
@@ -91,34 +145,42 @@ class Population {
    * Mutates randomly selected Citizens a little bit
    */
   mutate() {
-    this.nextPopulation.forEach(element => {
-      const chance = Math.random();
-      if (chance <= this.mutation.chance) {
-        const weights = element.getWeights();
-        const newWArr = [];
-        weights.forEach(w => {
-          const arr = w.flatten().dataSync();
-          arr.forEach((val, index) => {
-            const rate = Math.random();
-            if (rate <= this.mutation.rate) {
-              //Set new Value
-              arr[index] = Math.random() * 2 - 1;
-            }
+    tf.tidy(() => {
+      this.nextPopulation.forEach(element => {
+        const chance = Math.random();
+        if (chance <= this.mutation.chance) {
+          const weights = element.getWeights();
+          const newWArr = [];
+          weights.forEach(w => {
+            const arr = tf.tidy(() => {
+              return w.flatten().dataSync();
+            });
+
+            arr.forEach((val, index) => {
+              const rate = Math.random();
+              if (rate <= this.mutation.rate) {
+                //Set new Value
+                arr[index] = Math.random() * 2 - 1;
+              }
+            });
+            newWArr.push(arr);
           });
-          newWArr.push(arr);
-        });
 
-        // Now Reset Weights with new Values
-        const shapes = weights.map(x => x.shape);
-        const finalWeights = [];
-        shapes.forEach((x, index) => {
-          const t = tf.tensor2d(newWArr[index], x);
-          finalWeights.push(t);
-        });
+          // Now Reset Weights with new Values
+          const shapes = weights.map(x => x.shape);
 
-        // And give em to the citizen
-        element.setWeights(finalWeights);
-      }
+          const finalWeights = [];
+
+          shapes.forEach((x, index) => {
+            const t = tf.tensor2d(newWArr[index], x);
+            finalWeights.push(t);
+            tf.keep(t);
+          });
+
+          // And give em to the citizen
+          element.setWeights(finalWeights);
+        }
+      });
     });
   }
 
@@ -150,23 +212,35 @@ class Population {
         switch (currentplayer) {
           case 0:
             this.nextPopulation.push(game.p2);
+            this.genePool.push(
+              ...new Array(game.p2.fitness(game.game)).fill(game.p2)
+            );
+            this.lowFitness && game.p1.kill();
             break;
           case 1:
             this.nextPopulation.push(game.p1);
+            this.genePool.push(
+              ...new Array(game.p1.fitness(game.game)).fill(game.p1)
+            );
+            this.lowFitness && game.p2.kill();
             break;
           default:
             break;
         }
         game.finished = true;
       } else if (winner !== 0) {
-        console.log("A Fucking Bot won with " + gameResult.row);
+        console.log("A Bot won with " + gameResult.row);
         console.log(game.game.getStandings());
         switch (winner - 1) {
           case 0:
             this.nextPopulation.push(game.p1);
+            this.genePool.push(...new Array(8).fill(game.p1));
+            this.lowFitness && game.p2.kill();
             break;
           case 1:
             this.nextPopulation.push(game.p2);
+            this.genePool.push(...new Array(8).fill(game.p2));
+            this.lowFitness && game.p1.kill();
             break;
           default:
             break;

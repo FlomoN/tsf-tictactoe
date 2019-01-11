@@ -1,22 +1,51 @@
 <html>
   <head>
     <title>Tic Tac Toe Bot</title>
+    <link
+      rel="stylesheet"
+      type="text/css"
+      href="../node_modules/bootstrap/dist/css/bootstrap.min.css"
+    />
     <link rel="stylesheet" type="text/css" href="sass/main.sass" />
     <!-- Include Metatags! -->
   </head>
   <body>
-    <div class="playingfield">
-      <input type="button" class="field" href="#" />
-      <input type="button" class="field" href="#" />
-      <input type="button" class="field" href="#" />
-      <input type="button" class="field" href="#" />
-      <input type="button" class="field" href="#" />
-      <input type="button" class="field" href="#" />
-      <input type="button" class="field" href="#" />
-      <input type="button" class="field" href="#" />
-      <input type="button" class="field" href="#" />
+    <div class="container">
+      <div class="playingfield">
+        <input type="button" class="field" href="#" />
+        <input type="button" class="field" href="#" />
+        <input type="button" class="field" href="#" />
+        <input type="button" class="field" href="#" />
+        <input type="button" class="field" href="#" />
+        <input type="button" class="field" href="#" />
+        <input type="button" class="field" href="#" />
+        <input type="button" class="field" href="#" />
+        <input type="button" class="field" href="#" />
+      </div>
+      <button class="btn btn-primary" id="evolve">Evolve</button>
+      <button class="btn btn-primary" id="showvis">
+        Show Interesting Stuff
+      </button>
+      <div class="config">
+        <!-- Config Fields will be shown here -->
+        <div class="layersSelect card">
+          <input type="number" id="numLayers" />
+          <button class="btn btn-primary" id="setNumLayers">Set</button>
+        </div>
+        <div class="iterations card">
+          <input type="number" id="iterations" value="100" />
+        </div>
+        <div class="layers card"></div>
+      </div>
+      <button class="btn btn-secondary" id="setConfig">Set Config</button>
+      <div class="card">
+        <div class="card-body">
+          <p class="card-text" id="cicles">Cicles Run: 0/100</p>
+          <p class="card-text" id="fitness">Average Fitness: 0</p>
+        </div>
+      </div>
     </div>
-    <button id="evolve">Evolve</button>
+    <!-- Make UI For Choosing DNN Sizes and Activation Functions and Visualizing Data -->
   </body>
   <script src="js/index.js"></script>
 </html>

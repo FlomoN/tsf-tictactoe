@@ -42,10 +42,6 @@ class Tictactoegame {
     let winner = 0;
     let row = [];
 
-    if (this.roundsPlayed < 4) {
-      return { winner, row };
-    }
-
     winningStandings.forEach(element => {
       if (
         this.field[element[0]] !== 0 &&
@@ -56,6 +52,11 @@ class Tictactoegame {
         row = element;
       }
     });
+
+    if (this.roundsPlayed >= 9 && winner === 0) {
+      winner = Math.random() < 0.5 ? 1 : 2;
+      row = [0, 0, 0];
+    }
 
     return { winner, row };
   }
