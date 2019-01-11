@@ -10,7 +10,8 @@
     "sass-watch": "sass --watch src/sass:src/css",
     "start-b-s": "npm run sass-watch & npm run babel-watch",
     "parcel-watch": "rm -rf dist && rm -rf .cache && parcel src/index.html",
-    "start": "npm run parcel-watch"
+    "start": "npm run parcel-watch",
+    "win": "(if exist './dist' rd -r dist) && (if exist './.cache' rd -r .cache) && parcel src/index.html"
   },
   "repository": {
     "type": "git",
